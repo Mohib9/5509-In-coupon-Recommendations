@@ -1,0 +1,223 @@
+# The following Libraries were imported for the work
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+import seaborn as sns
+import sklearn
+from sklearn.decomposition import PCA 
+from sklearn.model_selection import train_test_split
+from matplotlib.pyplot import figure
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import cross_val_score
+from sklearn.ensemble import RandomForestClassifier , AdaBoostClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+from sklearn.neighbors import KNeighborsClassifier, KernelDensity
+from sklearn.naive_bayes import GaussianNB
+from sklearn.metrics import accuracy_score
+
+# importing Data
+veh_coupons =pd.read_csv("in-vehicle-coupon-recommendation.csv")
+
+# Having a overlook at the data
+veh_coupons.info()
+
+# Cleaning data
+##Checking for NAs and plotting them
+pd.DataFrame(veh_coupons.isna().sum()).plot(kind = 'bar', figsize = (10,8))
+plt.ylabel('No. of Missing Values')
+
+veh_coupons = veh_coupons.drop('car' , axis = 1)
+veh_coupons.dropna(inplace=True)
+
+# Carrying out EDA with plots of each feature against the dependant variable 'y'
+veh_coupons.head()
+veh_coupons.describe()
+
+vis = veh_coupons.drop('Y' ,axis =1)
+for i in vis.columns:
+    veh_coupons.groupby([i, 'Y'])['Y'].count().unstack().fillna(0).plot(kind= 'bar', color = ('red' , 'blue'), figsize=(15,10))
+    plt.xlabel(i)
+    plt.ylabel('Y')
+    plt.show()
+    
+ # Checking for collinearity and removing collinear features
+veh_coupons.drop('toCoupon_GEQ5min',axis = 1, inplace = True)
+veh_coupons.drop('direction_same',axis = 1, inplace = True)
+veh_coupons.drop('direction_opp',axis = 1, inplace = True)
+
+# Feature engineering by encoding the features depending on the classes of each
+encoder = sklearn.preprocessing.LabelEncoder()
+for i in veh_coupons.columns:
+    veh_coupons[i] = encoder.fit_transform(veh_coupons[i])
+  
+# Dividing into train and test set
+y = veh_coupons['Y']
+X = veh_coupons.drop('Y'  , axis = 1)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+ 
+# Designing the 7 planned models by using 5 fold cross validation and plotting them with mean accuracy
+
+# 1. Decision Tree
+dt_clf = DecisionTreeClassifier()
+k = 5
+score_dt = cross_val_score(dt_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+dt_model = dt_clf.fit(X_train, y_train)
+
+a = [1,2,3,4,5]
+plt.plot(score_dt, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("Decision Tree: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_dt.mean(), color='r', linestyle='--')
+plt.show()
+
+# 2. Random Forest
+rf_clf = RandomForestClassifier()
+k = 5
+score_rf = cross_val_score(dt_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+rf_model = rf_clf.fit(X_train, y_train)
+
+a = [1,2,3,4,5]
+plt.plot(score_rf, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("Random Forest: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_rf.mean(), color='r', linestyle='--')
+plt.show()
+
+# 3. Adaboost
+ab_clf = AdaBoostClassifier()
+k = 5
+score_ab = cross_val_score(ab_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+ab_model = ab_clf.fit(X_train, y_train)
+
+a = [1,2,3,4,5]
+plt.plot(score_ab, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("Adaboost: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_ab.mean(), color='r', linestyle='--')
+plt.show()
+
+# 4. Logistic Regression
+lr_clf = LogisticRegression()
+k = 5
+score_lr = cross_val_score(lr_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+lr_model = lr_clf.fit(X_train, y_train)
+
+a = [1,2,3,4,5]
+plt.plot(score_lr, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("Logistic Regression: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_lr.mean(), color='r', linestyle='--')
+plt.show()
+
+# 5. SVM
+svc_clf = SVC()
+k = 5
+score_svc = cross_val_score(svc_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+svc_model = svc_clf.fit(X_train, y_train)
+
+a = [1,2,3,4,5]
+plt.plot(score_svc, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("Support Vector Machine: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_svc.mean(), color='r', linestyle='--')
+plt.show()
+
+# 6. KNN
+knn_clf = KNeighborsClassifier()
+k = 5
+score_knn = cross_val_score(knn_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+knn_model = knn_clf.fit(X_train, y_train)
+
+a = [0,1,2,3,4,5]
+plt.plot(score_knn, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("K-Nearest Neighbour: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_knn.mean(), color='r', linestyle='--')
+plt.show()
+
+# 7. Naive Bayes
+gnb_clf = GaussianNB()
+k = 5
+score_nb = cross_val_score(gnb_clf , X_train, y_train, cv = k, scoring = 'accuracy')
+gnb_model = gnb_clf.fit(X_train, y_train)
+
+a = [1,2,3,4,5]
+plt.plot(score_nb, color='green', marker='o')
+plt.xlabel("CV number")
+plt.ylabel("Score")
+plt.title("Naive Bayes: Training Data")
+plt.xticks(a)
+plt.axhline(y=score_nb.mean(), color='r', linestyle='--')
+plt.show()
+
+
+## Testing the result of each model on test data
+
+# DT
+pre_dt = dt_model.predict(X_test)
+score_dtt = accuracy_score(pre_dt , y_test)
+
+# RF
+pre_rf = rf_model.predict(X_test)
+score_rft = accuracy_score(pre_rf , y_test)
+
+# AB
+pre_ab = ab_model.predict(X_test)
+score_abt = accuracy_score(pre_ab , y_test)
+
+# LR
+pre_lr = lr_model.predict(X_test)
+score_lrt = accuracy_score(pre_lr , y_test)
+
+# SVM
+pre_svc = svc_model.predict(X_test)
+score_svct = accuracy_score(pre_svc , y_test)
+
+# KNN
+pre_knn = knn_model.predict(X_test)
+score_knnt = accuracy_score(pre_knn , y_test)
+
+# NB
+pre_nb = gnb_model.predict(X_test)
+score_nbt = accuracy_score(pre_nb , y_test)
+
+## Comparing models based on their accuracy on train and test set
+data = [['Decision Tree' , score_dt.mean() , score_dtt], ['Random Forest' , score_rf.mean() , score_rft],
+                        ['Adaboost' , score_ab.mean(), score_abt], ['Logistic Regression' , score_lr.mean(), score_lrt],
+                        ['SVM' , score_svc.mean(), score_svct] , ['KNN', score_knn.mean(), score_knnt],
+                                                  ['Naive Bayes' , score_nb.mean(), score_nbt]]
+
+result = pd.DataFrame(data, columns = ['Model' , 'Training Accuracy' , 'Test Accuracy'])
+
+result.plot(x="Model", y=["Training Accuracy", 'Test Accuracy'], kind="bar", rot=5, fontsize=10, figsize=(15,10))
+
+## Optimizing the RF model based on max_features and n_estimators
+features= [ 'auto', 'sqrt', 'log2', None]
+estimators = [100,150,200,250,300,350,400,450,500]
+acc_score = []
+for i in features:
+    for j in estimators:
+        model = RandomForestClassifier(n_estimators = j , max_features = i ).fit( X_train, y_train)
+        
+        pred = model.predict(X_test)
+        
+        acc = accuracy_score(y_test,pred)
+        temp =(i , j , acc)
+        
+        acc_score.append(temp)
+        
+## Only marginal improvement in model against scalability, hence, no further optimization required
